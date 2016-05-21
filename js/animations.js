@@ -1,5 +1,12 @@
 $(document).ready(function() {
-
+  $('#fuck').hide('slow');
+  console.log($('#fuck'));
+/* ON PAGE LOAD */
+  $('.tweet-actions').css('display', 'none');
+  $('.stats').css('display', 'none');
+  $('.reply').css('display', 'none');
+  hoverEvent();
+  clickTweet();
 /* START EVENT HANDLERS */
 
   // FOCUS ON TEXT AREA
@@ -91,11 +98,42 @@ $(document).ready(function() {
     if($tweetLength > 0 && $tweetLength <= 140) {
       $('#stream').prepend(html);
     }
+
+    // RESET DASHBOARD
     $('.tweet-compose').val('');
     $('#char-count').text(140);
     $('.tweet-compose').css('height', '2.5em');
     $('#tweet-controls').css('display', 'none');
+    $('.tweet-actions').css('display', 'none');
+    hoverEvent();
   });
+
+  // HOVER OVER TWEET
+  function hoverEvent() {
+    $('.tweet').hover(
+      function() {
+        $(this).find('.tweet-actions').css('display', '');
+      },
+      function() {
+        $(this).find('.tweet-actions').css('display', 'none');
+      }
+    );
+  }
+
+  // CLICK TWEET
+  function clickTweet() {
+    $('.tweet').click(function() {
+      if($(this).find('.stats').css('display') === 'none' &&   $(this).find('.reply').css('display') === 'none') {
+        $(this).find('.stats').css('display', '');
+        $(this).find('.reply').css('display', '');
+      }
+      else {
+        $(this).find('.tweet-actions').css('display', 'none');
+        $(this).find('.stats').hide('slow');
+        $(this).find('.reply').hide('slow');
+      }
+    });
+  }
 /* END EVENT HANDLERS */
 
 });
