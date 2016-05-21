@@ -1,6 +1,4 @@
 $(document).ready(function() {
-  $('#fuck').hide('slow');
-  console.log($('#fuck'));
 /* ON PAGE LOAD */
   $('.tweet-actions').css('display', 'none');
   $('.stats').css('display', 'none');
@@ -124,6 +122,7 @@ $(document).ready(function() {
   function clickTweet() {
     $('.tweet').click(function() {
       if($(this).find('.stats').css('display') === 'none' &&   $(this).find('.reply').css('display') === 'none') {
+        $(this).find('.tweet-actions').css('display', '');
         $(this).find('.stats').css('display', '');
         $(this).find('.reply').css('display', '');
       }
