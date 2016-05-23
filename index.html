@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-
+		<link rel="stylesheet" href="css/tooltip.css" type="text/css" />
 		<link rel="stylesheet" href="css/styles.css" type="text/css" />
 	</head>
 	<body>
@@ -11,7 +11,7 @@
 			<div id="dashboard">
 				<div id="profile-summary">
 					<div class="content">
-						<img class='avatar' src='img/alagoon.jpg' data-toggle="tooltip"  title= "@that_one_dude"/>
+						<img class='avatar' src="img/alagoon.jpg" data-toggle="tooltip"  title= "@that_one_dude"/>
 						<p id="user-fullname">Mister Guy</p>
 						<p id = "user-username">@that_one_dude</p>
 					</div>
@@ -32,7 +32,7 @@
 
 						<!-- STEP 4: If the user puts in more than 140 characters, the tweet button should be disabled (and re-enabled when there are <= 140 chars) -->
 						<!-- HINT: javascript length method -->
-						<button class="button" id="tweet-submit">Tweet</button>
+						<button class="button" id="tweet-submit" disabled>Tweet</button>
 					</div>
 				</div>
 			</div>
@@ -182,6 +182,7 @@
 		<script src="js/jquery-2.0.3.min.js" charset="utf-8"></script>
 		<script src="js/jquery.timeago.js" charset="utf-8"></script>
 		<script src="js/tooltip.js" charset="utf-8"></script>
+		<script src="js/jsonfn.js" charset="utf-8"></script>
 		<script src="js/animations.js" charset="utf-8"></script>
 	</body>
 </html>

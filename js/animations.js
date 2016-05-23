@@ -1,7 +1,198 @@
 $(document).ready(function() {
+  /* DEFINE EVENT HANDLERS */
+    // HOVER TWEET EVENT
+    function hoverTweetEvent() {
+      function hoverInTweet(e) {
+        $(this).css('background', '#fafafa');
+        $(this).find('.tweet-actions').show(100);
+      }
+      function hoverOutTweet(e) {
+        $(this).css('background', 'inherit');
+        $(this).find('.tweet-actions').hide(100);
+      }
+
+      $('.tweet').hover(hoverInTweet, hoverOutTweet);
+    }
+
+    // CLICK TWEET EVENT
+    function clickTweetEvent() {
+      $('.tweet').on('click', function(e) {
+        var target = $(e.target).parents('.tweet');
+
+        // SHOW OR HIDE STATS AND REPLY
+        if(target.find('.reply').css('display') === 'none') {
+          target.find('.stats').slideDown(100);
+          target.find('.reply').slideDown(100);
+        }
+        else {
+          target.find('.stats').slideUp(200);
+          target.find('.reply').slideUp(200);
+        }
+      });
+    }
+
+    // CLICK TWEET ACTIONS
+    function clickTweetActionEvent(tweet) {
+      $('.tweet-actions').on('click', function(e) {
+        clickTweetEvent();
+        var target = e.target.innerText || e.target.className;
+        if(target === ' Reply' || target === 'icon action-reply') {
+          console.log('You clicked reply. Big whoop!');
+        }
+        else if(target === ' Retweet' || target === 'icon action-retweet') {
+          updateTweetStats.call($(this), tweet, 'retweetCount', '.num-retweets');
+          updateLocalStorage(JSON.stringify(tweet.id), JSONfn.stringify(tweet));
+        }
+        else if(target === ' Favorite' || target === 'icon action-favorite') {
+          updateTweetStats.call($(this), tweet, 'favCount', '.num-favorites');
+          updateLocalStorage(JSON.stringify(tweet.id), JSONfn.stringify(tweet));
+        }
+        else if(target === ' More' || target === 'icon action-more') {
+          console.log('You clicked more but I ain\'t got anymore');
+        }
+      });
+
+    }
+
+    // UPDATE TWEET STATS
+    function updateTweetStats(tweet, stat, className) {
+      tweet[stat]++;
+      $(this).next().find(className).text(tweet[stat]);
+    }
+
+    // FOCUS IN AND OUT OF TWEET TEXT AREA EVENT
+    function focusOnTweetComposeInDashBoard() {
+      $('#tweet-content .tweet-compose').focus(function() {
+        $('#tweet-controls').show(100);
+        $('#tweet-content .tweet-compose').css('height', '5em');
+      });
+      $('#tweet-content .tweet-compose').focusout(function() {
+        if($('#tweet-content .tweet-compose').val().length === 0) {
+          $('.tweet-compose').css('height', '2.5em');
+          $('#tweet-controls').hide(100);
+        }
+        else {
+          $('#tweet-content .tweet-compose').css('height', '5em');
+          $('#tweet-controls').show();
+        }
+      });
+    }
+
+    // COUNT CHARACTERS AND PERFORM ACTIONS ON EACH KEYUP EVENT
+    function keyupOnTweetComposeInDashboard() {
+      $('.tweet-compose').keyup(function() {
+        var $tweetLength = $('.tweet-compose').val().length;
+        $('#char-count').text(140 - $tweetLength);
+
+
+        if($tweetLength <= 0) {
+          $('#char-count').css('color', '#999');
+          $('#tweet-submit').attr('disabled','');
+        }
+        else if($tweetLength < 130 && $tweetLength > 0){
+          $('#char-count').css('color', '#999');
+          $('#tweet-submit').attr('disabled',null);
+        }
+        else if($tweetLength >= 130) {
+          $('#char-count').css('color', 'red');
+          if($tweetLength > 140) {
+            $('#tweet-submit').attr('disabled','');
+            var char = $tweetLength === 141 ? ' characters' : ' character';
+            $('#char-count').text($tweetLength < 340 ? 'You\'re over by ' + ((140 - $tweetLength) * (-1)) + char : 'Slow down there, buddy!');
+          }
+        }
+      });
+    }
+
+    // RESET DASHBOARD
+    function resetDashboard() {
+      $('.tweet-compose').val('');
+      $('#char-count').text(140);
+      $('.tweet-compose').css('height', '2.5em');
+      $('#tweet-controls').css('display', 'none');
+      $('.tweet-actions').css('display', 'none');
+      // SHOW THE TWEET'S REPLY AND STATS SECTION FOR HALF A SECOND, THEN HIDE IT
+      setTimeout(
+        function() {
+          if($(this).find('.reply').css('display') !== 'none') {
+            $('.stats').slideUp(200);
+            $('.reply').slideUp(200);
+          }
+        },
+        500
+      );
+    }
+
+    // UPDATE THE STREAM
+    function updateStream(tweet) {
+      $('#stream').prepend(tweet.html());
+      resetDashboard();
+      $('.tweet').off();
+      hoverTweetEvent();
+      clickTweetEvent();
+      $('.tweet-actions').off();
+      clickTweetActionEvent(tweet);
+    }
+
+    // UPDATE LOCAL STORAGE
+    function updateLocalStorage(key, tweet) {
+      localStorage.setItem(key, tweet);
+    }
+
+    // CLICK TWEET BUTTON EVENT
+    function submitTweetInDashboard() {
+      $('#tweet-submit').click(function() {
+        // BUILD A TWEET OBJECT
+        var tweet = new Tweet($('#user-username').text(), $('#user-fullname').text(), $('.tweet-compose').val(), $('.tweet-compose').val().length, $('#profile-summary > .content > .avatar').attr('src'), (new Date()));
+        var key = JSON.stringify(tweet.id);
+        // ADD THE TWEET OBJECT INTO LOCAL STORAGE WITH A KEY OF THE CURRENT TIME IN MILLISECONDS
+        updateLocalStorage(key, JSONfn.stringify(tweet));
+
+        // ADD TWEET TO THE STREAM
+        updateStream(tweet);
+      });
+    }
+  /* END DEFINE EVENT HANDLERS */
+
+/*--------------------------------------------------------------------------*/
+
+  /* END ON PAGE LOAD FUNCTIONS */
+    // LOAD TWEETS
+    (function whenPageLoadsDoThis() {
+      if(localStorage.length !== 0) {
+        for(var key in localStorage) {
+          var tweet = JSONfn.parse(localStorage[key]);
+          updateStream(tweet);
+          $('.tweet-actions').off();
+          clickTweetActionEvent(tweet);
+        }
+      }
+
+      // HIDE DASHBOARD BUTTON AND COUNTER
+      $('.tweet-actions').hide();
+      // HIDE TWEET STATS AND REPLY SECTION
+      $('.stats').hide();
+      $('.reply').hide();
+      // INITIALIZE TIMEAGO
+      $("time.timeago").timeago();
+      // INITIALIZE TOOLTIP
+      $('[data-toggle="tooltip"]').tooltip();
+      // INITIALIZE ALL EVENT LISTENERS
+      $('.tweet').off();
+      hoverTweetEvent();
+      clickTweetEvent();
+      focusOnTweetComposeInDashBoard();
+      keyupOnTweetComposeInDashboard();
+      submitTweetInDashboard();
+    })();
+  /* END ON PAGE LOAD FUNCTIONS */
+
+/*--------------------------------------------------------------------------*/
+
   /* START CONSTRUCTORS */
     // TWEET CONSTRUCTOR
     var Tweet = function(username, fullname, tweet, tweetLength, profilepic, timeposted) {
+      this.id                       = Date.now();
       this.username                 = username;
       this.fullname                 = fullname;
       this.tweet                    = tweet;
@@ -11,7 +202,7 @@ $(document).ready(function() {
       this.retweetCount             = 0;
       this.favCount                 = 0;
       this.usersInteract            = [];
-      this.buildHtml = function() {
+      this.html = function () {
         var html =
           '<div class="tweet">' +
             '<div class="content">' +
@@ -52,135 +243,9 @@ $(document).ready(function() {
               '</div>' +
             '</div>' +
           '</div>';
-
         return html;
       };
     };
   /* END CONSTRUCTORS */
-
-/* START ON PAGE LOAD FUNCTIONS */
-  // LOAD TWEETS
-  for(var key in localStorage) {
-    var tweet = JSON.parse(localStorage[key]);
-    console.log(tweet.html);
-    $('#stream').prepend(tweet.html);
-  }
-
-  $('.tweet-actions').hide();
-  $('.stats').hide();
-  $('.reply').hide();
-  hoverTweet();
-  clickTweet();
-  $("time.timeago").timeago();
-  $('[data-toggle="tooltip"]').tooltip();
-/* END ON PAGE LOAD FUNCTIONS */
-
-/*--------------------------------------------------------------------------*/
-
-
-/*--------------------------------------------------------------------------*/
-
-/* START EVENT HANDLERS */
-  // HOVER TWEET EVENT
-  function hoverTweet() {
-    $('.tweet').hover(
-      function(e) {
-        $(this).find('.tweet-actions').css('display', '');
-      },
-      function() {
-        $(this).find('.tweet-actions').css('display', 'none');
-      }
-    );
-  }
-  // CLICK TWEET EVENT
-  function clickTweet() {
-    $('.tweet').click(function() {
-      if($(this).find('.reply').css('display') === 'none') {
-        $(this).find('.stats').show(100);
-        $(this).find('.reply').show(100);
-      }
-      else {
-        $(this).find('.stats').hide(200);
-        $(this).find('.reply').hide(200);
-      }
-    });
-  }
-
-  // FOCUS IN AND OUT ON TWEET TEXT AREA EVENT
-  $('#tweet-content .tweet-compose').focus(function() {
-    $('#tweet-controls').css('display', 'inherit');
-    $('#tweet-content .tweet-compose').css('height', '5em');
-  });
-  $('#tweet-content .tweet-compose').focusout(function() {
-    if($('#tweet-content .tweet-compose').val().length === 0) {
-      $('.tweet-compose').css('height', '2.5em');
-      $('#tweet-controls').css('display', 'none');
-    }
-    else {
-      $('#tweet-content .tweet-compose').css('height', '5em');
-      $('#tweet-controls').css('display', 'inherit');
-    }
-  });
-
-  // COUNT CHARACTERS AND PERFORM ACTIONS ON EACH KEYUP EVENT
-  $('.tweet-compose').keyup(function() {
-    var $tweetLength = $('.tweet-compose').val().length;
-    $('#char-count').text(140 - $tweetLength);
-
-    if($tweetLength >= 130) {
-      $('#char-count').css('color', 'red');
-    }
-    else if($tweetLength < 130){
-      $('#char-count').css('color', '#999');
-    }
-
-    if($tweetLength > 140) {
-      var char = $tweetLength === 141 ? ' characters' : ' character';
-      $('#tweet-submit').attr('disabled','');
-      $('#char-count').text($tweetLength < 340 ? 'You\'re over by ' + ((140 - $tweetLength) * (-1)) + char : 'Slow down there, buddy!');
-    }
-    else if($tweetLength <= 140){
-      $('#tweet-submit').removeAttr('disabled','');
-    }
-  });
-
-  // CLICK TWEET BUTTON EVENT
-  $('#tweet-submit').on('click', function() {
-    // BUILD A TWEET OBJECT
-    var tweet = new Tweet($('#user-username').text(), $('#user-fullname').text(), $('.tweet-compose').val(), $('.tweet-compose').val().length, $('#profile-summary > .content > .avatar').attr('src'), (new Date()));
-    // CREATE THE HTML FOR THE TWEET AND APPEND IT TO THE TWEET OBJECT
-    tweet.html = tweet.buildHtml();
-
-    // ADD THE TWEET OBJECT INTO LOCAL STORAGE WITH A KEY VALUE OF THE CURRENT TIME IN MILLISECONDS
-    localStorage.setItem(JSON.stringify(Date.now()), JSON.stringify(tweet));
-    console.log(tweet);
-
-    if(tweet.tweetLength > 0 && tweet.tweetLength <= 140) {
-
-      $('#stream').prepend(tweet.html);
-
-
-      // RESET DASHBOARD
-      $('.tweet-compose').val('');
-      $('#char-count').text(140);
-      $('.tweet-compose').css('height', '2.5em');
-      $('#tweet-controls').css('display', 'none');
-      $('.tweet-actions').css('display', 'none');
-
-      // ADD HOVER EVENT TO NEW TWEET
-      hoverTweet();
-      window.setTimeout(function() {
-        if($(this).find('.reply').css('display') !== 'none') {
-          $('.stats').hide(200);
-          $('.reply').hide(200);
-        }
-      }, 500);
-
-      // ADD CLICK EVENT TO THE NEW TWEET
-      clickTweet();
-    }
-  });
-
-/* END EVENT HANDLERS */
 
 });
