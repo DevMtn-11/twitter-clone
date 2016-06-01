@@ -34,7 +34,6 @@ $(document).ready(function() {
     // CLICK TWEET ACTIONS
     function clickTweetActionEvent(tweet) {
       $('.tweet-actions').on('click', function(e) {
-        clickTweetEvent();
         var target = e.target.innerText || e.target.className;
         if(target === ' Reply' || target === 'icon action-reply') {
           console.log('You clicked reply. Big whoop!');
